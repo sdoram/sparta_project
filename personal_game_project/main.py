@@ -26,10 +26,9 @@ class Character:
             print(f"{other.name}이(가) 쓰러졌습니다.")
 
     def power_attack(self, other):
-        self.mana -= 3
         damage = random.randint(self.power, self.power * 2)
         other.hp = max(other.hp - damage, 0)
-        print(f"{self.name}의 마법 공격! {other.name}에게 {damage}의 데미지를 입혔습니다.")
+        print(f"{self.name}의 강한 공격! {other.name}에게 {damage}의 데미지를 입혔습니다.")
         if other.hp == 0:
             print(f"{other.name}이(가) 쓰러졌습니다.")
 
@@ -46,6 +45,28 @@ class Character:
                 f"{self.name}의 마법 공격!  {other.name}에게 {damage}의 데미지를 입혔습니다.")
             if other.hp == 0:
                 print(f"{other.name}이(가) 쓰러졌습니다.")
+
+    def player_attack(self):
+        while True:
+            print(f'{player.name}의 차례\n'
+                  f'일반 공격 : 1, 마법 공격: 2')
+            player.attack_type = input()
+            if player.attack_type == '1':
+                player.attack(monster)
+                break
+            elif player.attack_type == '2':
+                player.magic_attack(monster)
+                break
+            else:
+                print('choice 1 or 2')
+                continue
+
+    def monster_attack(self):
+        player.attack_type = random.randint(1, 2)
+        if player.attack_type == 1:
+            monster.attack(player)
+        elif player.attack_type == 2:
+            monster.power_attack(player)
 
     def show_status(self):
         # 최대 체력 제한
@@ -70,21 +91,6 @@ class Player(Character):
         self.max_mana = 15
         self.mana = 15
         self.attack_type = ''
-
-    def player_attack(self):
-        while True:
-            print(f'{player.name}의 차례\n'
-                  f'일반 공격 : 1, 마법 공격: 2')
-            player.attack_type = input()
-            if player.attack_type == '1':
-                player.attack(monster)
-                break
-            elif player.attack_type == '2':
-                player.magic_attack(monster)
-                break
-            else:
-                print('choice 1 or 2')
-                continue
 
     def result(self, other):
         if self.hp == 0:
@@ -158,7 +164,7 @@ class Battle():
             print(f'{turn}턴 ', end='')
 
             player.player_attack()
-            monster.attack(player)
+            monster.monster_attack()
             if player.hp == 0:
                 score = (monster.max_hp-monster.hp)//5
                 print(f'{player.name}의 패배입니다.\n'
@@ -169,11 +175,12 @@ class Battle():
 
             if monster.hp == 0:
                 score = (player.hp+player.mana*5 +
-                         monster.max_hp//3)*(10-turn)
+                         monster.max_hp//3)*(20-turn)
                 winsound.PlaySound('./sound/good.wav',
                                    winsound.SND_FILENAME)
                 print(f'{player.name}의 승리입니다!\n'
                       f'score = {score}')
+                break
                 # 중간 스코어
                 # sum_score += score
                 # 스테이지 기능
