@@ -101,7 +101,7 @@ class User(BaseCharactor):
             '3': {
                 'job': '궁수',
                 'hp': random.randint(self.hp, int(self.hp*1.5)),
-                'mp': random.randint(self.mp, int(self.mp*1.5)),
+                'mp': self.mp,
                 'power': random.randint(self.power, int(self.power*2)),
                 'magic_power': random.randint(int(self.magic_power*1.5), int(self.magic_power*2)),
                 'avoid': random.randint(int(self.avoid*1.5), int(self.avoid*2))
@@ -109,7 +109,7 @@ class User(BaseCharactor):
             '4': {
                 'job': '도적',
                 'hp': random.randint(self.hp, int(self.hp*1.5)),
-                'mp': random.randint(self.mp, int(self.mp*1.5)),
+                'mp': self.mp,
                 'power': random.randint(int(self.power*1.5), int(self.power*2)),
                 'magic_power': random.randint(self.magic_power, int(magic_power*1.5)),
                 'avoid': random.randint(int(self.avoid*2), int(self.avoid*3))
@@ -145,76 +145,81 @@ class User(BaseCharactor):
     def show_status(self):
         print(f'name = {self.name}\nlv = {self.lv}\nhp = {self.hp}\nmp = {self.mp}\npower = {self.power}\nmagic_power = {self.magic_power}\navoid = {self.avoid}\njob = {self.job}')
 
-
-class Warrior:
     def warrior_skil_1(self, other):
         mp_consum = 5
         if self.mp < mp_consum:
             text = [f'마나가{mp_consum - self.mp}만큼 모자랍니다']
         else:
             self.mp -= mp_consum
-            damage = random.randint(self.power, self.power*1.2)
+            damage = random.randint(int(self.power), int(self.power*1.5))
             other.hp = max(other.hp - damage, 0)
+            # 데미지의 20% 회복
+            heal = int(damage * 0.2)
+
+            self.hp += heal
+            # 체력 제한
+            if self.max_hp < self.hp:
+                self.hp = self.max_hp
             text = [
                 f'마나 {mp_consum}을 소모합니다.\n'
-                f"{self.name}의 마법 공격!  {other.name}에게 {damage}의 데미지를 입혔습니다.\n"
+                f"{self.name}의 흡혈 공격!  {other.name}에게 {damage}의 데미지를 입혔습니다.\n"
+                f'{self.name}이 체력을{heal} 만큼 회복했습니다.\n'
+                f'{self.name}의 현재 HP: {self.hp}\n'
                 f'{other.name}의 현재 HP:{other.hp}']
             if other.hp == 0:
-                text.append = [f"{other.name}이(가) 쓰러졌습니다."]
+                text.append([f"{other.name}이(가) 쓰러졌습니다."])
         return text
 
+    def wizard_skil_1(self):
+        # 마나 회복 : 명상
+        mp_recovery = random.randint(1, self.magic_power)
+        self.mp += mp_recovery
+        # 마나량 제한
+        if self.max_mp < self.mp:
+            self.mp = self.max_mp
 
-class Wizard:
-    def wizard_skil_1(self, other):
-        mp_consum = 5
-        if self.m < mp_consum:
-            text = [f'마나가{mp_consum - self.mp}만큼 모자랍니다']
-        else:
-            self.mp -= mp_consum
-            damage = random.randint(self.magic_power, self.magic_power*2)
-            other.hp = max(other.hp - damage, 0)
-            text = [
-                f'마나 {mp_consum}을 소모합니다.\n'
-                f"{self.name}의 마법 공격!  {other.name}에게 {damage}의 데미지를 입혔습니다.\n"
-                f'{other.name}의 현재 HP:{other.hp}']
-            if other.hp == 0:
-                text.append = [f"{other.name}이(가) 쓰러졌습니다."]
+        text = [
+            f'{self.name}의 명상! {self.name}이(가) {mp_recovery}만큼 회복하였습니다.\n'
+            f'{self.name}의 현재 MP:{self.mp}']
         return text
 
-
-class Thief:
-    def thief_skil_1(self, other):
+    def thief_skil_1(self):
+        # 회복 : 붕대 감기
         mp_consum = 5
         if self.mp < mp_consum:
             text = [f'마나가{mp_consum - self.mp}만큼 모자랍니다']
         else:
             self.mp -= mp_consum
-            damage = random.randint(self.magic_power, self.magic_power + 5)
-            other.hp = max(other.hp - damage, 0)
+            heal = random.randint(int(self.avoid*0.5), self.avoid)
+            self.hp += heal
+            # 체력 제한
+            if self.max_hp < self.hp:
+                self.hp = self.max_hp
             text = [
                 f'마나 {mp_consum}을 소모합니다.\n'
-                f"{self.name}의 마법 공격!  {other.name}에게 {damage}의 데미지를 입혔습니다.\n"
-                f'{other.name}의 현재 HP:{other.hp}']
-            if other.hp == 0:
-                text.append = [f"{other.name}이(가) 쓰러졌습니다."]
+                f'{self.name}의 붕대 감기 ! {self.name}이(가) {heal}만큼 회복하였습니다.\n'
+                f'{self.name}의 현재 HP:{self.hp}']
         return text
 
-
-class Archer:
     def archer_skil_1(self, other):
         mp_consum = 5
         if self.mp < mp_consum:
             text = [f'마나가{mp_consum - self.mp}만큼 모자랍니다']
         else:
             self.mp -= mp_consum
-            damage = random.randint(self.magic_power, self.magic_power + 5)
+            attack_number = random.randint(1, 5)
+            damage = random.randint(
+                int((self.power+self.magic_power)/2), int((self.power+self.magic_power)))
             other.hp = max(other.hp - damage, 0)
-            text = [
-                f'마나 {mp_consum}을 소모합니다.\n'
-                f"{self.name}의 마법 공격!  {other.name}에게 {damage}의 데미지를 입혔습니다.\n"
-                f'{other.name}의 현재 HP:{other.hp}']
+            max_damage = 0
+            # 공격 횟수 * damage
+            for i in range(1, attack_number+1):
+                max_damage += damage
+            text = [f'마나 {mp_consum}을 소모합니다.\n'
+                    f"{self.name}의 연속 공격! {attack_number}번 공격해 {other.name}에게 총 {max_damage}의 데미지를 입혔습니다.\n"
+                    f'{other.name}의 현재 HP:{other.hp}']
             if other.hp == 0:
-                text.append = [f"{other.name}이(가) 쓰러졌습니다."]
+                text.append([f"{other.name}이(가) 쓰러졌습니다."])
         return text
 
 
