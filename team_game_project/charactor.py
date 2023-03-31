@@ -17,7 +17,7 @@ class BaseCharactor:
         self.avoid = avoid
 
     def attack(self, other):
-        miss = other.avoid/100
+        miss = int(other.avoid)/100
         result = random.choices(range(0, 2), weights=[miss, 1-miss])
         if result == [1]:
             damage = random.randint(int(self.power*0.8), int(self.power*1.2))
@@ -25,6 +25,8 @@ class BaseCharactor:
             text = [f'{self.name}이 {other.name}을 {damage}의 데미지로 공격']
             if other.hp == 0:
                 text.append(f'{other.name}이(가) 쓰러졌습니다.')
+                self.gold += other.gold
+                text.append(f'{self.name}은(는) {other.gold}골드를 얻었습니다.')
         else:
             text = [f'{self.name}의 공격이 실패']
         return text
@@ -38,9 +40,13 @@ class BaseCharactor:
                 damage = random.randint(
                     int(self.power*0.8), int(self.power*1.2))
                 other.hp = max(other.hp - damage, 0)
-                text = [f'{self.name}이 {other.name}을 {damage}의 데미지로 필살 공격 !!!']
+                text = [
+                f'{self.name}이 마나 {mp_consum}을 소모합니다.\n'
+                f'{self.name}이 {other.name}을 {damage}의 데미지로 필살 공격 !!!']
                 if other.hp == 0:
                     text.append(f'{other.name}이(가) 쓰러졌습니다.')
+                    self.gold += other.gold
+                    text.append(f'{self.name}은(는) {other.gold}골드를 얻었습니다.')
             else:
                 text = [f'{self.name}의 필살 공격이 실패']
         else:
@@ -48,36 +54,30 @@ class BaseCharactor:
         return text
 
     def magic_attack(self, other):
-        damage = random.randint(self.magic_power*0.8, self.magic_power*1.2)
-        other.hp = max(other.hp - damage, 0)
-        text = [f'{self.name}이 {other.name}을 {damage}의 데미지로 마법공격']
+        mp_consum = 5
+        if self.mp < mp_consum:
+            text = [f'마나가{mp_consum - self.mp}만큼 모자랍니다']
+        else:
+            self.mp -= mp_consum
+            damage = random.randint(int(self.magic_power*0.8), int(self.magic_power*1.2))
+            other.hp = max(other.hp - damage, 0)
+            text = [
+                f'{self.name}이 마나 {mp_consum}을 소모합니다.\n'
+                f'{self.name}이 {other.name}을 {damage}의 데미지로 마법공격']
         if other.hp == 0:
-            text = [f'{self.name}의 공격이 실패']
+            text.append(f'{other.name}이(가) 쓰러졌습니다.')
+            self.gold += other.gold
+            text.append(f'{self.name}은(는) {other.gold}골드를 얻었습니다.')
         return text
+        
+    def mp_get(self):
+        self.mp += 1
+        if self.mp > self.max_mp: self.mp = self.max_mp
 
-    def show_status(self):
-        print(self.name, self.lv, self.hp, self.mp,
-              self.power, self.magic_power, self.avoid)
-
-    # 전투 중 몬스터 몇 마리 만날 것인지?
-    # 경험치 : 경험치 테이블도 만들어야 함 > 경험치를 넣어주면 레벨을 리턴
-    # 레벨업 시 모든 체력과 마나 회복
-    # 몬스터 보상 : 골드, 경험치
-
-    # 전투중 랜덤으로 서브 몬스터 추가됨
-    # 캐릭터 선택 후 난이도 선택에 따른 몬스터 공격력, HP량, 스킬횟수 증가 ex) 하수, 중수, 고수
-
-    # 직업 전용스킬
-    # 회복
-
-    # 플레이어 공격방식 선택
-    # 몬스터가 랜덤 공격
-    # 회복시 최대치 제한
-    # 진행 턴을 계수로 받는 스킬
 
 
 class User(BaseCharactor):
-    def __init__(self, name=None, lv=None, hp=100, mp=100, power=10, magic_power=10, avoid=10, job=None, gold=None):
+    def __init__(self, name=None, lv=None, hp=100, mp=100, power=100, magic_power=10, avoid=10, job=None, gold=0):
         super().__init__(name, lv, hp, mp, power, magic_power, avoid)
         self.job = job
         self.gold = gold
@@ -117,12 +117,18 @@ class User(BaseCharactor):
         }
 
     def input_id(self):
-        self.name = input('당신의 이름을 알려주세요 : ')
-        print(f'당신의 이름은 {self.name} 입니다')
+        while True:
+            self.name = input('당신의 이름을 알려주세요 : ')
+            if self.name =='':
+                print('다시 입력해주세요')
+                continue
+            else: break
+        text = f'당신의 이름은 {self.name} 입니다'
+        return text
 
     def job_select(self):
         while True:
-            print('전사:1 마법사:2 궁수:3 도적:4')
+            print('1 : 전사, 2 : 마법사, 3 : 궁수, 4 : 도적')
             self.job = input('직업을 선택해주세요 : ')
             if self.job in self.job_dict.keys():
                 user = User(
@@ -146,6 +152,7 @@ class User(BaseCharactor):
         print(f'name = {self.name}\nlv = {self.lv}\nhp = {self.hp}\nmp = {self.mp}\npower = {self.power}\nmagic_power = {self.magic_power}\navoid = {self.avoid}\njob = {self.job}')
 
     def warrior_skil_1(self, other):
+        # 흡혈 스킬
         mp_consum = 5
         if self.mp < mp_consum:
             text = [f'마나가{mp_consum - self.mp}만큼 모자랍니다']
@@ -161,13 +168,15 @@ class User(BaseCharactor):
             if self.max_hp < self.hp:
                 self.hp = self.max_hp
             text = [
-                f'마나 {mp_consum}을 소모합니다.\n'
+                f'{self.name}이 마나 {mp_consum}을 소모합니다.\n'
                 f"{self.name}의 흡혈 공격!  {other.name}에게 {damage}의 데미지를 입혔습니다.\n"
                 f'{self.name}이 체력을{heal} 만큼 회복했습니다.\n'
                 f'{self.name}의 현재 HP: {self.hp}\n'
                 f'{other.name}의 현재 HP:{other.hp}']
             if other.hp == 0:
-                text.append([f"{other.name}이(가) 쓰러졌습니다."])
+                text.append(f"{other.name}이(가) 쓰러졌습니다.")
+                self.gold += other.gold
+                text.append(f'{self.name}은(는) {other.gold}골드를 얻었습니다.')
         return text
 
     def wizard_skil_1(self):
@@ -196,12 +205,13 @@ class User(BaseCharactor):
             if self.max_hp < self.hp:
                 self.hp = self.max_hp
             text = [
-                f'마나 {mp_consum}을 소모합니다.\n'
+                f'{self.name}이 마나 {mp_consum}을 소모합니다.\n'
                 f'{self.name}의 붕대 감기 ! {self.name}이(가) {heal}만큼 회복하였습니다.\n'
                 f'{self.name}의 현재 HP:{self.hp}']
         return text
 
     def archer_skil_1(self, other):
+        # 타수 스킬
         mp_consum = 5
         if self.mp < mp_consum:
             text = [f'마나가{mp_consum - self.mp}만큼 모자랍니다']
@@ -215,16 +225,19 @@ class User(BaseCharactor):
             # 공격 횟수 * damage
             for i in range(1, attack_number+1):
                 max_damage += damage
-            text = [f'마나 {mp_consum}을 소모합니다.\n'
-                    f"{self.name}의 연속 공격! {attack_number}번 공격해 {other.name}에게 총 {max_damage}의 데미지를 입혔습니다.\n"
-                    f'{other.name}의 현재 HP:{other.hp}']
+            text = [
+                f'{self.name}이 마나 {mp_consum}을 소모합니다.\n'
+                f"{self.name}의 연속 공격! {attack_number}번 공격해 {other.name}에게 총 {max_damage}의 데미지를 입혔습니다.\n"
+                f'{other.name}의 현재 HP:{other.hp}']
             if other.hp == 0:
-                text.append([f"{other.name}이(가) 쓰러졌습니다."])
+                text.append(f"{other.name}이(가) 쓰러졌습니다.")
+                self.gold += other.gold
+                text.append(f'{self.name}은(는) {other.gold}골드를 얻었습니다.')
         return text
 
 
 class Item(BaseCharactor):
-    def __init__(self, name=None, lv=None, hp=None, mp=None, power=None, magic_power=None, avoid=None):
+    def __init__(self, name=None, lv=0, hp=0, mp=0, power=0, magic_power=0, avoid=0):
         super().__init__(name, lv, hp, mp, power, magic_power, avoid)
 
 
@@ -233,23 +246,23 @@ main_random = random.randint(3, 5)
 
 
 item_list = {
-    1: Item(name='wand', mp=sub_random, magic_power=main_random),
-    2: Item(name='greatsword', hp=sub_random, power=main_random),
-    3: Item(name='knife', power=sub_random, avoid=main_random),
-    4: Item(name='bow', hp=main_random, avoid=sub_random),
-
-
+    1: Item(name='마법사의 정수', mp=sub_random, magic_power=main_random),
+    2: Item(name='전사의 정수', hp=sub_random, power=main_random),
+    3: Item(name='도적의 정수', power=sub_random, avoid=main_random),
+    4: Item(name='궁수의 정수', hp=main_random, avoid=sub_random),
 }
 
 
 class Inventory(BaseCharactor):
-    def __init__(self, name=None, lv=None, hp=None, mp=None, power=None, magic_power=None, avoid=None):
+    def __init__(self, name=None, lv=None, hp=None, mp=None, power=None, magic_power=None, avoid=None, gold=None):
         super().__init__(name, lv, hp, mp, power, magic_power, avoid)
+        self.gold = gold
 
 
+# gold 조정해야함
 shopping_list = {
-    1: Inventory(name='hp potion', hp=10),
-    2: Inventory(name='mp potion', mp=5),
-    3: Inventory(name='용의 비늘(power +5)', power=10),
-    4: Inventory(name='magic_power up', magic_power=10),
+    1: Inventory(name='hp potion', hp=10, gold=50),
+    2: Inventory(name='mp potion', mp=5, gold=80),
+    3: Inventory(name='power +10 up', power=10, gold=100),
+    4: Inventory(name='magic power +10 up', magic_power=10, gold=120),
 }
