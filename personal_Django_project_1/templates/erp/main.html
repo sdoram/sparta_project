@@ -1,6 +1,9 @@
 <h1>로그인 성공 후 페이지</h1>
-<form action="/sign-up/" method="post">
-    <button type="submit" class="btn btn-primary">로그아웃</button>
-    <a href="/sign-up" class="btn btn-secondary">회원가입 페이지로</a>
+<span >
+    {{ user.username }} 님 반갑습니다!
+</span>
+    <div>
     <a href="/sign-in/">로그인</a>
-</form>
+    <a href="/sign-up/" >회원가입 페이지로</a>
+    <a href="/logout/"> 로그아웃 </a>
+    </div>

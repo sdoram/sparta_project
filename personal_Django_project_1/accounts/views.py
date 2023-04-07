@@ -11,6 +11,8 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.contrib import auth
+from django.http import HttpResponseRedirect
 from .forms import SignupForm
 from django.views.decorators.csrf import csrf_exempt
 
@@ -24,7 +26,7 @@ def signup(request):
 
         if form.is_valid():
             form.save()
-            return redirect('/sign-in/')
+            return redirect('/sign-in')
     else:
         form = SignupForm()
         # {'form': form} 의미가 뭘까
@@ -41,11 +43,9 @@ def user_login(request):
 
         if user is not None:
             login(request, user)
-            # redirect로 변경 해야함
-            return redirect('/main/')
-            # return render(request, 'erp/main.html')
+            return redirect('/main')
         return HttpResponse('로그인 실패')
-    else:
+    elif request.method == "GET":
         return render(request, 'accounts/signin.html')
 
 
@@ -53,8 +53,18 @@ def user_login(request):
 def user_logout(request):
     # 로그아웃 view
     logout(request)
-    return redirect('/')
+    # ValueError at /logout/
+    # The view django.contrib.auth.logout didn't
+    # return an HttpResponseobject.
+    # It returned None instead.
+    # 해결 방법을 모르겠다.
+    return redirect('/sign-in')
 
 
 def go_main(request):
-    return render(request, 'erp/main.html')
+    # 로그인 여부 확인
+    user = request.user.is_authenticated
+    if user:
+        return render(request, 'erp/main.html')
+    else:
+        return redirect('/sign-in')
