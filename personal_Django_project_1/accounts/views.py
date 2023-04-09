@@ -11,8 +11,6 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from django.contrib import auth
-from django.http import HttpResponseRedirect
 from .forms import SignupForm
 from django.views.decorators.csrf import csrf_exempt
 
@@ -27,10 +25,15 @@ def signup(request):
         if form.is_valid():
             form.save()
             return redirect('/sign-in')
-    else:
-        form = SignupForm()
-        # {'form': form} 의미가 뭘까
-    return render(request, 'accounts/signup.html', {'form': form})
+
+    elif request.method == "GET":
+        user = request.user.is_authenticated
+        if user:
+            return redirect('/')
+        else:
+            form = SignupForm()
+            # {'form': form} 의미가 뭘까
+            return render(request, 'accounts/signup.html', {'form': form})
 
 
 def user_login(request):
@@ -60,7 +63,7 @@ def user_login(request):
 @login_required
 def user_logout(request):
     # 로그아웃 view
-    auth.logout(request)
+    logout(request)
     return redirect('/sign-in')
 
 
