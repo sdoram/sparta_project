@@ -43,21 +43,24 @@ def user_login(request):
 
         if user is not None:
             login(request, user)
-            return redirect('/main')
+            return redirect('/')
         return HttpResponse('로그인 실패')
     elif request.method == "GET":
-        return render(request, 'accounts/signin.html')
+        user = request.user.is_authenticated
+        if user:
+            return redirect('/')
+        else:
+            return render(request, 'accounts/signin.html')
+
+
+
+
 
 
 @login_required
 def user_logout(request):
     # 로그아웃 view
-    logout(request)
-    # ValueError at /logout/
-    # The view django.contrib.auth.logout didn't
-    # return an HttpResponseobject.
-    # It returned None instead.
-    # 해결 방법을 모르겠다.
+    auth.logout(request)
     return redirect('/sign-in')
 
 
